@@ -63,7 +63,6 @@ add_message_files(
 add_service_files(
   FILES
   GetLocation.srv
-  GetLocationProb.srv
   GetProbability.srv
 #   Service1.srv
 #   Service2.srv

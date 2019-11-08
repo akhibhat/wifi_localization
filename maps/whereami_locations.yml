@@ -1,0 +1,15 @@
+Levine:
+  floor_4:
+    regions: ["elevator_area_4", "mrsl", "charity_office", "bump_space", "ramp2towne"]
+  floor_3:
+    regions: ["elevator_area_3"]
+  floor_2:
+    regions: ["grasp_seminar_pizza"]
+  floor_1:
+    regions: ["levine_lobby", "elevator_area_1"]
+
+Towne:
+  floor_2:
+    regions: ["active_learning"]
+  floor_1:
+    regions: ["accenture_cafe"]

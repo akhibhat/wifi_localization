@@ -1,2 +1,4 @@
 ---
-string loc
+string floor
+string building
+string region
