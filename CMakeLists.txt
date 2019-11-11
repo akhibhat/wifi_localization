@@ -54,7 +54,6 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
     FILES
-    WifiScan.msg
 #   Message1.msg
 #   Message2.msg
 )
@@ -114,13 +113,14 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    CATKIN_DEPENDS message_runtime
+    CATKIN_DEPENDS 
+    message_runtime
     roscpp
     geometry_msgs
     sensor_msgs
     nav_msgs
     eigen_conversions
-#  INCLUDE_DIRS include
+    INCLUDE_DIRS include
 #  LIBRARIES wifi_slam
 #  CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs
 #  DEPENDS system_lib
@@ -150,11 +150,13 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/wifi_slam_node.cpp)
-add_executable(wifi_scanner 
+add_executable(${PROJECT_NAME}_node 
+                src/waypoint_gen.cpp
                 src/wifi_scanner.cpp
                 src/wifi_scanner_node.cpp)
-target_link_libraries(wifi_scanner ${catkin_LIBRARIES})
-add_dependencies(wifi_scanner wifi_slam_generate_messages_cpp)
+
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+#add_dependencies(waypoint_gen wifi_slam_generate_messages_cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
