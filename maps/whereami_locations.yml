@@ -1,15 +1,12 @@
 Levine:
-  floor_4:
-    regions: ["elevator_area_4", "mrsl", "charity_office", "bump_space", "ramp2towne"]
-  floor_3:
-    regions: ["elevator_area_3"]
-  floor_2:
-    regions: ["grasp_seminar_pizza"]
-  floor_1:
-    regions: ["levine_lobby", "elevator_area_1"]
+  floor_4: ["elevator_area_4", "mrsl", "charity_office", "bump_space", "ramp2towne3"]
+  floor_3: ["elevator_area_3"]
+  floor_2: ["grasp_seminar_pizza"]
+  floor_1: ["levine_lobby", "elevator_area_1"]
 
 Towne:
-  floor_2:
-    regions: ["active_learning"]
-  floor_1:
-    regions: ["accenture_cafe"]
+  floor_2: ["active_learning"]
+  floor_1: ["accenture_cafe"]
+
+Moore:
+  floor_1: ["detkin_sig", "eniac"]

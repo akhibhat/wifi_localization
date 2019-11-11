@@ -27,7 +27,7 @@ def handle_get_location(req):
     for building in buildings:
         floors = list(whereami_cfg[building].keys())
         for floor in floors:
-            regions = whereami_cfg[building][floor]['regions']
+            regions = whereami_cfg[building][floor]
             if loc in regions:
                 loc_building = building
                 loc_floor = floor
