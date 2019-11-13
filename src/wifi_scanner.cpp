@@ -1,4 +1,4 @@
-#include "wifi_slam/wifi_scan.h"
+#include <wifi_slam/wifi_scan.h>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -16,14 +16,10 @@ WifiMapGen::WifiMapGen(ros::NodeHandle &nh){
     float interval_;
     float almostequal_;
     std::vector<float> startPoint_;
-//    geometry_msgs::Pose currentGoal_;
-//    const char* wifi_cmd_;
-//    const char* acc_pts_cmd_;
-//    Eigen::MatrixXf mean_wifi_;
-//    Eigen::MatrixXf std_wifi_;
-
     nh_.param<float>("stop_interval", interval_, 0.5);
     nh_.getParam("start_point", startPoint_);
+
+    waypoint_gen_ = new WaypointGen(nh_);
 }
 
 //WifiMapGen::~WifiMapGen(){
@@ -38,14 +34,20 @@ void WifiMapGen::initialize(){
     angular_min_ = 0.05;
     stopMsg_.linear.x = 0;
     stopMsg_.angular.z = 0;
+    currentIdx_ = 0;
     wifi_cmd_ = (const char*)"iwconfig wlp3s0";
     acc_pts_cmd_ = (const char*)"sudo iwlist wlp3s0 scanning";
 
+    map_.access_points = waypoint_gen_->get_access_points();
+    map_.vertices = waypoint_gen_->rearrange_wpts();
+
     reach_local_goal_pub_ = nh_.advertise<std_msgs::Bool>("reached_goal", 1);
+    collect_info_pub_ = nh_.advertise<std_msgs::Bool>("wifi_tasks", 1);
     twist_pub_ = nh_.advertise<nav_msgs::Odometry>("cmd_vel", 10);
 
     odom_sub_ = nh_.subscribe("odom", 1, &WifiMapGen::odomCallback, this);
     next_goal_sub_ = nh_.subscribe("waypoint", 1, &WifiMapGen::nextGoalCallback, this);
+    wifi_info_sub_ = nh_.subscribe("wifi_info", 5, &WifiMapGen::wifiInfoCallback, this);
 }
 
 void WifiMapGen::odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
@@ -69,15 +71,9 @@ void WifiMapGen::odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
 
     float distToGoal = sqrt(pow(currentPos.position.x - currentGoal_.position.x, 2) + pow(currentPos.position.y - currentGoal_.position.y, 2));
 
-    if (distToGoal < almostequal_){
+    if (distToGoal > almostequal_){
         //function to collect wifi information
         //Then publish high boolean to reached goal topic
-        reachedGoalTasks();
-
-        reachGoal.data = 1;
-        reach_local_goal_pub_.publish(reachGoal);
-    }
-    else{
         reachGoal.data = 0;
         reach_local_goal_pub_.publish(reachGoal);
         
@@ -86,6 +82,28 @@ void WifiMapGen::odomCallback(const nav_msgs::Odometry::ConstPtr& odom_msg){
         rotateTurtle(goal_orient, currentPos.orientation);
         moveTurtle(drive_vel_, 0);
     }
+    else if (distToGoal < almostequal_){
+        currentIdx_++;
+        reachGoal.data = 1;
+        reach_local_goal_pub_.publish(reachGoal);
+    }
+}
+
+void WifiMapGen::wifiInfoCallback(const wifi_slam::WifiInfo::ConstPtr& wifi_msg){
+    std::vector<double> list_mean;
+    std::vector<double> list_std;
+
+    list_mean = wifi_msg->wifiMean;
+    list_std = wifi_msg->wifiStd;
+
+    for (int i=0; i<list_mean.size(); i++){
+        map_.mean_wifi(currentIdx_,i) = list_mean[i];
+        map_.std_wifi(currentIdx_,i) = list_std[i];
+    }
+
+    std_msgs::Bool taskDone;
+    taskDone.data = 1;
+    collect_info_pub_.publish(taskDone);
 }
 
 void WifiMapGen::nextGoalCallback(const geometry_msgs::Pose::ConstPtr& waypoint_msg){
@@ -143,69 +161,4 @@ void WifiMapGen::moveTurtle(double linearVelocity, double angVelocity){
     }
 
     twist_pub_.publish(move_msg);
-}
-
-void WifiMapGen::reachedGoalTasks(){
-
-    //TODO Collect wifi information and store in required format
-    std::string access_pts = get_data(acc_pts_cmd_);
-
-    std::istringstream f(access_pts);
-    std::string line;
-
-    std::vector<std::string> address_line;
-    std::vector<std::string> strength_line;
-
-    std::vector<std::string> temp_address;
-    std::vector<std::string> temp_str;
-    std::vector<std::string> temp_ssid;
-
-    while (std::getline(f, line)){
-        if (line.length()>35){
-            std::string out_line = line.substr(20,35);
-            if (out_line.substr(0,7) == "Address"){
-                temp_address.push_back(out_line.substr(9,17));
-            }
-            if (out_line.substr(0,7) == "Quality"){
-                temp_str.push_back(out_line.substr(28,3));
-            }
-            if (out_line.substr(0,5) == "ESSID"){
-                temp_ssid.push_back(out_line.substr(6));
-            }
-        }
-    }
-
-    for (int i=0; i<temp_str.size(); i++){
-        if (temp_ssid[i] == "AirPennNet-Device"){
-            address_line.push_back(temp_address[i]);
-            strength_line.push_back(temp_str[i]);
-        }
-    }
-    
-//    for (int i=0; i<address_line.size(); i++){
-//        int j;
-//        for (j=0; j<access_points_.size(); j++){
-//            if (access_points_[j] == address_line[i]){
-//                
-//            }
-//        }
-//    }
-    
-//    currentIdx_++;
-//    currentGoal_ = waypoints_[currentIdx_];
-}
-
-std::string WifiMapGen::get_data(const char* cmd){
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe){
-        throw std::runtime_error("popen failed!");
-    }
-
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr){
-        result += buffer.data();
-    }
-
-    return result;
 }

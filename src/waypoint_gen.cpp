@@ -1,4 +1,4 @@
-#include "wifi_slam/waypoint_gen.h"
+#include <wifi_slam/waypoint_gen.h>
 #include <fstream>
 #include <sstream>
 #include <cstdio>
@@ -13,10 +13,8 @@ WaypointGen::WaypointGen(ros::NodeHandle &nh){
     nh_ = nh;
 
     std::string filePath_;
-    std::string accessPath_;
     std::vector<float> startPoint_;
     std::vector<geometry_msgs::Pose> waypoints_;
-    std::vector<std::string> access_points_;
     int currentIdx_ = 0;
 
     nh_.getParam("file_path", filePath_);
@@ -30,7 +28,7 @@ WaypointGen::WaypointGen(ros::NodeHandle &nh){
 void WaypointGen::initialize(){
     almostequal_ = 0.05;
     nh_.advertise<geometry_msgs::Pose>("waypoint",1);
-    nh_.subscribe("reached_goal", 1, &WaypointGen::reachGoalCallback, this);
+    nh_.subscribe("wifi_tasks", 1, &WaypointGen::reachGoalCallback, this);
 }
 
 std::vector<std::vector<float>> WaypointGen::get_skeleton(){
@@ -57,24 +55,6 @@ std::vector<std::vector<float>> WaypointGen::get_skeleton(){
     inFile.close();
 
     return skeleton;
-}
-
-void WaypointGen::get_access_points(){
-    std::ifstream inFile;
-
-    std::string ap;
-
-    inFile.open(accessPath_);
-    if(!inFile){
-        ROS_INFO("Unable to open file");
-        exit(1);
-    }
-
-    while (inFile >> ap){
-        access_points_.push_back(ap);
-    }
-
-    inFile.close();
 }
 
 std::vector<std::vector<float>> WaypointGen::generate_waypoints(const std::vector<std::vector<float>> &skeleton){
@@ -115,7 +95,7 @@ std::vector<std::vector<float>> WaypointGen::generate_waypoints(const std::vecto
     return vertices;
 }
 
-void WaypointGen::rearrange_wpts(){
+std::vector<geometry_msgs::Pose> WaypointGen::rearrange_wpts(){
     int start_idx;
     
     std::vector<std::vector<float>> skeleton = get_skeleton();
@@ -145,8 +125,6 @@ void WaypointGen::rearrange_wpts(){
         wpt.position.z = 0;
         waypoints_.push_back(wpt);
     }
-
-    get_access_points();
 }
 
 void WaypointGen::reachGoalCallback(const std_msgs::Bool::ConstPtr& reach_goal_msg){
@@ -156,6 +134,24 @@ void WaypointGen::reachGoalCallback(const std_msgs::Bool::ConstPtr& reach_goal_m
         geometry_msgs::Pose waypoint_msg = waypoints_[currentIdx_];
         
         currentIdx_++;
-        waypoint_pub.publish(waypoint_msg);
+        waypoint_pub_.publish(waypoint_msg);
     }
+}
+
+std::vector<std::string> WaypointGen::get_access_points(){
+    std::ifstream inFile;
+    std::string ap;
+
+    inFile.open(accessPath_);
+    if(!inFile){
+        ROS_INFO("Unable to open file");
+        exit(1);
+    }
+
+    while (inFile >> ap){
+        accessPoints_.push_back(ap);
+    }
+    inFile.close();
+
+    return accessPoints_;
 }
