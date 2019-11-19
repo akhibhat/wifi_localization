@@ -45,6 +45,8 @@ class WifiMapGen
         float angular_max_;
         float angular_min_;
         std::string accessPath_;
+        std::string meanFile_;
+        std::string stdFile_;
 
         //Global variables
         const char* wifi_cmd_;
@@ -64,6 +66,7 @@ class WifiMapGen
         void rotateTurtle(float goal_orient, geometry_msgs::Quaternion curr_quat);
         void driveStraight(float vel, float dist);
         void moveTurtle(double linearVelocity, double angVelocity);
+        void writeData();
 
         //Map Struct
         WifiMap map_;

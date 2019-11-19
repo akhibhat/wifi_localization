@@ -17,16 +17,18 @@ WaypointGen::WaypointGen(ros::NodeHandle &nh){
     std::vector<geometry_msgs::Pose> waypoints_;
     int currentIdx_ = 0;
 
-    nh_.getParam("file_path", filePath_);
+//    nh_.getParam("file_path", filePath_);
 }
 
-//WifiMapGen::~WifiMapGen(){
+WaypointGen::~WaypointGen(){
 //    delete filePath_;
 //    delete waypoints_;
-//}
+}
 
 void WaypointGen::initialize(){
     almostequal_ = 0.05;
+    filePath_ = "/home/akhilesh/catkin_ws/src/wifi_localization/maps/Levine1Moore1.map";
+    accessPath_ = "";
     nh_.advertise<geometry_msgs::Pose>("waypoint",1);
     nh_.subscribe("wifi_tasks", 1, &WaypointGen::reachGoalCallback, this);
 }
@@ -130,7 +132,6 @@ std::vector<geometry_msgs::Pose> WaypointGen::rearrange_wpts(){
 void WaypointGen::reachGoalCallback(const std_msgs::Bool::ConstPtr& reach_goal_msg){
     
     if (reach_goal_msg->data != 0){
-
         geometry_msgs::Pose waypoint_msg = waypoints_[currentIdx_];
         
         currentIdx_++;
@@ -152,6 +153,6 @@ std::vector<std::string> WaypointGen::get_access_points(){
         accessPoints_.push_back(ap);
     }
     inFile.close();
-
+    
     return accessPoints_;
 }

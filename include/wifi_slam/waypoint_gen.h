@@ -39,8 +39,8 @@ private:
 
     //Subscriber Callbacks
     void reachGoalCallback(const std_msgs::Bool::ConstPtr& reach_goal_msg);
-
-    //Other background functions
     std::vector<std::vector<float>> get_skeleton();
     std::vector<std::vector<float>> generate_waypoints(const std::vector<std::vector<float>> &skeleton);
+
+    //Other background functions
 };

@@ -22,10 +22,10 @@ WifiMapGen::WifiMapGen(ros::NodeHandle &nh){
     waypoint_gen_ = new WaypointGen(nh_);
 }
 
-//WifiMapGen::~WifiMapGen(){
+WifiMapGen::~WifiMapGen(){
 //    delete filePath_;
 //    delete waypoints_;
-//}
+}
 
 void WifiMapGen::initialize(){
     almostequal_ = 0.05;
@@ -37,6 +37,8 @@ void WifiMapGen::initialize(){
     currentIdx_ = 0;
     wifi_cmd_ = (const char*)"iwconfig wlp3s0";
     acc_pts_cmd_ = (const char*)"sudo iwlist wlp3s0 scanning";
+//    meanFile_ = "wifi_mean.csv";
+//    stdFile_ = "wifi_std.csv";
 
     map_.access_points = waypoint_gen_->get_access_points();
     map_.vertices = waypoint_gen_->rearrange_wpts();
@@ -162,3 +164,13 @@ void WifiMapGen::moveTurtle(double linearVelocity, double angVelocity){
 
     twist_pub_.publish(move_msg);
 }
+
+//void WifiMapGen::writeData(){
+//    const static Eigen::IOFormat CSVFormat_(int _precision=StreamPrecision, ", ", "\n");
+//
+//    std::ofstream meanfile(meanFile_.c_str());
+//    meanfile << map_.mean_wifi.format(CSVFormat_);
+//
+//    std::ofstream stdfile(stdFile_.c_str());
+//    stdfile << map_.std_wifi.format(CSVFormat_);
+//}
